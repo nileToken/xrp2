@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XRP Transfer</title>
+    <script src="https://cdn.jsdelivr.net/npm/xrp-lib@latest/dist/xrp-lib.min.js"></script>
+</head>
+<body>
+    <h1>XRP Transfer from Multi-Signature Wallet</h1>
+    <form id="transferForm">
+        <label for="seedPhrase">12-Word Seed Phrase:</label><br>
+        <input type="text" id="seedPhrase" name="seedPhrase" required><br>
+        <label for="destination">Destination Address:</label><br>
+        <input type="text" id="destination" name="destination" required><br>
+        <label for="amount">Amount of XRP:</label><br>
+        <input type="number" id="amount" name="amount" required><br><br>
+        <button type="submit">Transfer XRP</button>
+    </form>
+
+    <script>
+        document.getElementById('transferForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const seedPhrase = document.getElementById('seedPhrase').value;
+            const destination = document.getElementById('destination').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            try {
+                // Derive keys using the seed phrase
+                const keypair = await xrpLib.getKeypairFromSeed(seedPhrase);
+                const fromAddress = keypair.publicKey;
+
+                // Create and sign the transaction
+                const transaction = {
+                    "TransactionType": "Payment",
+                    "Account": fromAddress,
+                    "Destination": destination,
+                    "Amount": xrpLib.xrpToDrops(amount)
+                };
+
+                const signedTx = await xrpLib.sign(transaction, keypair.privateKey);
+
+                // Submit the transaction
+                const response = await xrpLib.submit(signedTx);
+                alert('Transaction Response: ' + JSON.stringify(response));
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
